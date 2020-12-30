@@ -1,6 +1,8 @@
 package com.example.musicapp.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Song(
-    var name: String = "",
-    var imageUrl: String = ""
+    @SerializedName("trackName")
+    var name: String = ""
 )

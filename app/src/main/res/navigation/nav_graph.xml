@@ -9,5 +9,61 @@
         android:id="@+id/mainFragment"
         android:name="com.example.musicapp.ui.mainFragment.MainFragment"
         android:label="main_fragment"
-        tools:layout="@layout/main_fragment" />
+        tools:layout="@layout/main_fragment" >
+        <action
+            android:id="@+id/action_mainFragment_to_artistFragment"
+            app:destination="@id/artistFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/albumFragment"
+        android:name="com.example.musicapp.ui.albumFragment.AlbumFragment"
+        android:label="fragment_song"
+        tools:layout="@layout/fragment_song" >
+        <action
+            android:id="@+id/action_albumFragment_to_songFragment"
+            app:destination="@id/songFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_albumFragment_to_artistFragment"
+            app:destination="@id/artistFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/artistFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/artistFragment"
+        android:name="com.example.musicapp.ui.artistFragment.ArtistFragment"
+        android:label="fragment_artist" >
+        <action
+            android:id="@+id/action_artistFragment_to_albumFragment"
+            app:destination="@id/albumFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/songFragment"
+        android:name="com.example.musicapp.ui.songFragment.SongFragment"
+        android:label="fragment_song" >
+        <action
+            android:id="@+id/action_songFragment_to_artistFragment"
+            app:destination="@id/artistFragment"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right"
+            app:popEnterAnim="@anim/slide_in_right"
+            app:popExitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/artistFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 </navigation>

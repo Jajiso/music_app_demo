@@ -8,5 +8,4 @@ class VMFactory(private val repository: IRepository): ViewModelProvider.Factory 
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         return modelClass.getConstructor(IRepository::class.java).newInstance(repository)
     }
-
 }

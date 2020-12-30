@@ -6,7 +6,6 @@ import androidx.recyclerview.widget.RecyclerView
 abstract class BaseAdapter<T>(private var dataList: List<T>): RecyclerView.Adapter<BaseViewHolder<T>>() {
 
     abstract fun setViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<T>
-    //abstract fun configure(holder: BaseViewHolder<*>, position: Int)
 
     fun updateList(dataList: List<T> ) {
         this.dataList = dataList

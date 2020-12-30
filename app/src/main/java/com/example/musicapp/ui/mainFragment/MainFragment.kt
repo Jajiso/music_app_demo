@@ -5,64 +5,48 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import android.widget.SearchView
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import com.example.musicapp.R
-import com.example.musicapp.data.DataSource
+import com.example.musicapp.data.remote.NetworkDataSource
 import com.example.musicapp.databinding.MainFragmentBinding
+import com.example.musicapp.utils.*
 import com.example.musicapp.domain.Repository
-import com.example.musicapp.ui.adapter.AlbumAdapter
-import com.example.musicapp.valueObject.Resource
 import com.example.musicapp.viewmodel.MainViewModel
 import com.example.musicapp.viewmodel.factory.VMFactory
 
 
 class MainFragment : Fragment() {
 
-    private lateinit var albumAdapter: AlbumAdapter
-    private val viewModel by viewModels<MainViewModel> {
+    private val viewModel by activityViewModels<MainViewModel> {
         VMFactory(
-            Repository(
-                DataSource()
-            )
+                Repository(
+                        NetworkDataSource()
+                )
         )
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle? ): View {
         return inflater.inflate(R.layout.main_fragment, container, false)
-
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = MainFragmentBinding.bind(view)
-        binding.message.text = "funciona"
 
-        setupRecyclerView(binding.rvAlbum)
-
-        viewModel.fetchAlbumList.observe(viewLifecycleOwner) {
-            when (it) {
-                is Resource.Loading -> {}
-                is Resource.Success -> {
-                    binding.message.text = "${it.data[0].name}"
-                    albumAdapter = AlbumAdapter(requireContext(), it.data)
-                    binding.rvAlbum.adapter = albumAdapter
-                }
-                is Resource.Failure -> { binding.message.text = "${it.exception.message}"}
-            }
-        }
+        setupSearchView(binding.searchView)
     }
 
-    fun setupRecyclerView(rv: RecyclerView) {
-        rv.layoutManager = LinearLayoutManager(requireContext())
-        rv.addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL) )
-
+    private fun setupSearchView(sv: SearchView) {
+        sv.queryHint = viewModel.searchViewText
+        sv.onQueryTextChanged { artistName ->
+            viewModel.searchViewText = artistName
+            viewModel.setSearchByArtistName(artistName)
+            findNavController().navigate(R.id.action_mainFragment_to_artistFragment)
+        }
     }
 
 }
