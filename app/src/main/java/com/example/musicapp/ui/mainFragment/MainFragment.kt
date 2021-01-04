@@ -9,6 +9,8 @@ import android.widget.SearchView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.musicapp.R
+import com.example.musicapp.data.local.AppDatabase
+import com.example.musicapp.data.local.LocalDataSource
 import com.example.musicapp.data.remote.NetworkDataSource
 import com.example.musicapp.databinding.MainFragmentBinding
 import com.example.musicapp.utils.*
@@ -22,7 +24,10 @@ class MainFragment : Fragment() {
     private val viewModel by activityViewModels<MainViewModel> {
         VMFactory(
                 Repository(
-                        NetworkDataSource()
+                    NetworkDataSource(),
+                    LocalDataSource(
+                        AppDatabase.getDatabase( requireContext() )
+                    )
                 )
         )
     }

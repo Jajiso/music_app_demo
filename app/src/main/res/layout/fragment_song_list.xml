@@ -42,7 +42,7 @@
         </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvAlbum"
+            android:id="@+id/rvSong"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="8dp"

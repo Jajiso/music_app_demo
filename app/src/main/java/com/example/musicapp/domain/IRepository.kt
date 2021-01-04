@@ -9,4 +9,7 @@ interface IRepository {
     suspend fun getArtistList(artistName: String):Resource<List<Artist>>
     suspend fun getAlbumList(artistId: String):Resource<List<Album>>
     suspend fun getSongList(albumId: String):Resource<List<Song>>
+    suspend fun isLikedSong(song: Song): Boolean
+    suspend fun insertLikedSong(song: Song)
+    suspend fun deleteLikedSong(song: Song)
 }

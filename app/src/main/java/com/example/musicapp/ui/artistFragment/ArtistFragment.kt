@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicapp.R
 import com.example.musicapp.base.OnItemClickListener
+import com.example.musicapp.data.local.AppDatabase
+import com.example.musicapp.data.local.LocalDataSource
 import com.example.musicapp.data.remote.NetworkDataSource
 import com.example.musicapp.data.model.Artist
 import com.example.musicapp.databinding.FragmentArtistBinding
@@ -29,7 +31,10 @@ class ArtistFragment : Fragment() {
     private val viewModel by activityViewModels<MainViewModel> {
         VMFactory(
             Repository(
-                NetworkDataSource()
+                NetworkDataSource(),
+                LocalDataSource(
+                    AppDatabase.getDatabase( requireContext() )
+                )
             )
         )
     }

@@ -5,12 +5,14 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.example.musicapp.base.BaseAdapter
 import com.example.musicapp.base.BaseViewHolder
+import com.example.musicapp.base.OnItemClickListener
 import com.example.musicapp.data.model.Song
 import com.example.musicapp.databinding.CardSongBinding
 
 class SongAdapter(
     private val context: Context,
-    songList: List<Song>
+    songList: List<Song>,
+    private val itemClickListener: OnItemClickListener<Song>
 ) : BaseAdapter<Song>(songList) {
 
     override fun setViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<Song> {
@@ -23,6 +25,7 @@ class SongAdapter(
     ) : BaseViewHolder<Song>(binding.root) {
         override fun bind(item: Song) = with(binding) {
             tvSongName.text = item.name
+            itemView.setOnClickListener { itemClickListener.onItemClick(item) }
         }
     }
 }

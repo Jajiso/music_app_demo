@@ -1,33 +1,36 @@
 package com.example.musicapp.ui.songFragment
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.SearchView
+import android.widget.SeekBar
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.musicapp.R
+import com.example.musicapp.data.local.AppDatabase
+import com.example.musicapp.data.local.LocalDataSource
 import com.example.musicapp.data.remote.NetworkDataSource
 import com.example.musicapp.databinding.FragmentSongBinding
 import com.example.musicapp.domain.Repository
-import com.example.musicapp.ui.adapter.SongAdapter
-import com.example.musicapp.utils.*
-import com.example.musicapp.valueObject.Resource
-import com.example.musicapp.viewmodel.MainViewModel
+import com.example.musicapp.viewmodel.SongViewModel
 import com.example.musicapp.viewmodel.factory.VMFactory
-
+import kotlinx.coroutines.*
+import java.util.concurrent.TimeUnit
 
 class SongFragment : Fragment() {
 
-    private lateinit var songAdapter: SongAdapter
-    private val viewModel by activityViewModels<MainViewModel> {
+    private val mediaPlayer = MediaPlayer()
+    private val viewModel by activityViewModels<SongViewModel> {
         VMFactory(
             Repository(
-                NetworkDataSource()
+                NetworkDataSource(),
+                LocalDataSource(
+                    AppDatabase.getDatabase( requireContext() )
+                )
             )
         )
     }
@@ -42,38 +45,104 @@ class SongFragment : Fragment() {
 
         val binding = FragmentSongBinding.bind(view)
 
-        setupSearchView(binding.searchView)
-        setupRecyclerView(binding.rvSong)
         setupObservers(binding)
     }
 
+    override fun onPause() {
+        mediaPlayer.stop()
+        mediaPlayer.reset()
+        super.onPause()
+    }
+
     private fun setupObservers(binding: FragmentSongBinding) {
-        viewModel.fetchSongList.observe(viewLifecycleOwner) { resource ->
-            binding.progressBar.showIf { resource is Resource.Loading }
-            when (resource) {
-                is Resource.Loading -> { }
-                is Resource.Success -> {
-                    songAdapter = SongAdapter(requireContext(), resource.data)
-                    binding.rvSong.adapter = songAdapter
+        viewModel.isLiked.observe(viewLifecycleOwner, Observer { isLiked ->
+            if (isLiked) {
+                binding.imageLike.setImageResource(R.drawable.ic_like_yes)
+            }else {
+                binding.imageLike.setImageResource(R.drawable.ic_like_no)
+            }
+        })
+
+        viewModel.song.observe(viewLifecycleOwner, Observer { song ->
+            if (song == null) {
+                findNavController().navigate(R.id.action_songFragment_to_songListFragment)
+            } else {
+                viewModel.setIsLiked(song)
+                binding.imageLike.setOnClickListener {
+                    viewModel.deleteOrInsertLikedSong(song)
                 }
-                is Resource.Failure -> {
-                    showToast("There has been an error: ${resource.exception.message}")
+                binding.tvTitleSongName.text = song.name
+
+                mediaPlayer.setDataSource(song.previewUrl)
+
+                setupMediaPlayer(binding)
+                setupMediaPlayerComponents(binding)
+            }
+        })
+    }
+
+    private fun setupMediaPlayer(binding: FragmentSongBinding) {
+        mediaPlayer.prepareAsync()
+
+        mediaPlayer.setOnPreparedListener { mp ->
+            binding.seekBarPlayer.max = mediaPlayer.duration
+            binding.tvMaximumDuration.text = convertFormat(mediaPlayer.duration)
+            mediaPlayer.start()
+            binding.imagePlayPause.setImageResource(R.drawable.ic_pause)
+            updateSeekBar(binding.seekBarPlayer, mp)
+        }
+
+        mediaPlayer.setOnBufferingUpdateListener { mp, percent ->
+            binding.seekBarPlayer.secondaryProgress = (mp.duration.times((percent / 100)))
+        }
+
+        mediaPlayer.setOnCompletionListener { mp ->
+            binding.imagePlayPause.setImageResource(R.drawable.ic_play)
+            mp.seekTo(0)
+            binding.seekBarPlayer.setProgress(0, true)
+        }
+
+    }
+
+    private fun setupMediaPlayerComponents(binding: FragmentSongBinding) {
+        binding.seekBarPlayer.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged( seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if(fromUser) {
+                    mediaPlayer.seekTo(progress)
+                    seekBar?.progress = progress
                 }
+                binding.tvCurrentTime.text = convertFormat(mediaPlayer.currentPosition)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        binding.imagePlayPause.setOnClickListener {
+            if (mediaPlayer.isPlaying ) {
+                mediaPlayer.pause()
+                binding.imagePlayPause.setImageResource(R.drawable.ic_play)
+            } else {
+                mediaPlayer.start()
+                binding.imagePlayPause.setImageResource(R.drawable.ic_pause)
+                updateSeekBar(binding.seekBarPlayer, mediaPlayer)
             }
         }
     }
 
-    private fun setupRecyclerView(rv: RecyclerView) {
-        rv.layoutManager = GridLayoutManager(requireContext(), 2)
+    private fun convertFormat(duration: Int): String {
+        return String.format("%02d:%02d",
+            TimeUnit.MILLISECONDS.toMinutes(duration.toLong()),
+            TimeUnit.MILLISECONDS.toSeconds(duration.toLong()) -
+            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration.toLong()))
+        )
     }
 
-    private fun setupSearchView(sv: SearchView) {
-        sv.queryHint = viewModel.searchViewText
-
-        sv.onQueryTextChanged { artistName ->
-            viewModel.searchViewText = artistName
-            viewModel.setSearchByArtistName(artistName)
-            findNavController().navigate(R.id.action_songFragment_to_artistFragment)
+    private fun updateSeekBar(seekBar: SeekBar, mediaPlayer: MediaPlayer) {
+        GlobalScope.launch {
+            while (mediaPlayer.isPlaying ) {
+                seekBar.progress = mediaPlayer.currentPosition
+            }
         }
     }
+
 }
